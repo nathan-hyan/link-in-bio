@@ -6,6 +6,8 @@ node_modules/
 dist/
 build/
 .react-router/
+*.tsbuildinfo
+worker-configuration.d.ts
 
 # Cloudflare / Wrangler
 .wrangler/
