@@ -1,6 +1,9 @@
 import type { Route } from "./+types/home";
 import { getDb } from "../db/client";
+import { logPageView } from "../lib/events";
 import { getEnabledLinks } from "../lib/links";
+import { reorderForSource } from "../lib/source-reorder";
+import { resolveSource } from "../lib/source-resolution";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,7 +15,11 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({
+  context,
+  params,
+  request,
+}: Route.LoaderArgs) {
   const db = getDb(context.cloudflare.env.DB);
   const links = await getEnabledLinks(db);
 
@@ -20,7 +27,12 @@ export async function loader({ context }: Route.LoaderArgs) {
     throw new Response(null, { status: 503 });
   }
 
-  return { links };
+  const validSlugs = new Set(links.map((l) => l.slug));
+  const { source, rawPath } = resolveSource(params.slug, validSlugs);
+
+  await logPageView({ db, source, rawPath, request });
+
+  return { links: reorderForSource(links, source) };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
