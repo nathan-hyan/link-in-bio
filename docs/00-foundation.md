@@ -24,8 +24,8 @@ Project scaffold: React Router v7 framework mode + Vite + Tailwind + TypeScript 
 - `workers/app.ts` — Workers fetch handler that delegates to React Router via `createRequestHandler`. Declares `AppLoadContext.cloudflare = { env, ctx }`.
 - `app/entry.server.tsx` — SSR streaming entry (template default; bot detection waits for full content)
 - `app/root.tsx` — HTML shell, `<Layout>`, `<App>`, `ErrorBoundary`. Loads Inter from Google Fonts, links favicon
-- `app/routes.ts` — single route table: index → `routes/home.tsx`
-- `app/routes/home.tsx` — placeholder home: logo + "est. 1995" + "Coming soon"
+- `app/routes.ts` — route table (Foundation set this to a single index route; Features 02 and 03 expanded it to `:slug?` + `out/:slug`).
+- `app/routes/home.tsx` — initially the placeholder home (logo + "est. 1995" + "Coming soon"); Features 01–03 grew the loader and component to the current public page.
 - `app/app.css` — Tailwind v4 `@import "tailwindcss"` + Inter font theme
 - `app/db/schema.ts` — Drizzle table defs for `links` and `events`; exports `Link`, `NewLink`, `Event`, `NewEvent` types
 - `app/db/client.ts` — `getDb(d1: D1Database)` factory wrapping `drizzle(d1, { schema })`; exports `Db` type
@@ -77,9 +77,9 @@ No foreign keys. Events store slug as string (append-only history).
 
 Each binding's package.json has `os`/`cpu` restrictions, so pnpm will skip the wrong-arch one at install time. **Keep these versions in sync with `rolldown` itself** — when rolldown bumps, both bindings need the same bump. If a future pnpm release fixes optional-deps installation, drop both pins and the `pnpm.supportedArchitectures` block in `package.json`.
 
-### D1 placeholder
+### D1 ID is wired
 
-`wrangler.jsonc` has `database_id: "REPLACE_WITH_REAL_D1_ID_AFTER_CREATING"`. **Local dev works without a real ID** (miniflare creates a sandbox D1), but production deploys cannot succeed until the real D1 exists. See "First-time setup" below.
+`wrangler.jsonc` carries the real `database_id` for the prod `hyan-linkbio` D1. Local dev uses miniflare's sandbox D1 regardless of the configured ID; the value matters only for `wrangler d1 migrations apply --remote` and `wrangler deploy`. The "First-time setup" steps below are kept as a reference for spinning the project up against a fresh Cloudflare account.
 
 ### Tailwind v4
 
@@ -95,7 +95,9 @@ The 80%/70% thresholds catch dead code but do not drive design. Per CLAUDE.md, t
 
 ---
 
-## First-time setup (one-time, before first deploy)
+## First-time setup (already done — kept as reference for fresh setups)
+
+> All five steps below are complete on this project. They're documented here so a fresh clone (e.g. another artist, a recovery scenario) can repeat them.
 
 1. **Create the production D1 database** (run from your local machine with wrangler authenticated):
    ```bash
@@ -104,7 +106,7 @@ The 80%/70% thresholds catch dead code but do not drive design. Per CLAUDE.md, t
    ```
    Copy the returned `database_id`.
 
-2. **Update `wrangler.jsonc`** — replace `REPLACE_WITH_REAL_D1_ID_AFTER_CREATING` with the real ID. Commit and push.
+2. **Update `wrangler.jsonc`** — paste the real ID into the `database_id` field. Commit and push.
 
 3. **Set the GitHub Actions secret** at https://github.com/nathan-hyan/link-in-bio/settings/secrets/actions:
    - `CLOUDFLARE_API_TOKEN` — created from the Cloudflare dashboard using the "Edit Cloudflare Workers" preset PLUS the `D1: Edit` scope. Scope to your account and the `hyan.dev` zone only.
@@ -112,7 +114,7 @@ The 80%/70% thresholds catch dead code but do not drive design. Per CLAUDE.md, t
 4. **First merge to `main`** triggers the deploy job:
    - `pnpm db:migrate:prod` applies migration `0000_public_loki.sql`
    - `pnpm db:seed:prod` inserts the 5 starting platforms (idempotent)
-   - `pnpm deploy` builds and uploads the Worker
+   - `pnpm run deploy` builds and uploads the Worker (note: `pnpm run`, not `pnpm` — `pnpm deploy` is a built-in command)
 
 5. **Custom domain** — once deployed, attach `link-in-bio.hyan.dev` to the Worker via Cloudflare dashboard → Workers & Pages → hyan-link-in-bio → Settings → Domains & Routes → Add custom domain. Cloudflare auto-provisions the cert.
 
