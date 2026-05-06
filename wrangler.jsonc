@@ -10,7 +10,7 @@
     {
       "binding": "DB",
       "database_name": "hyan-linkbio",
-      "database_id": "REPLACE_WITH_REAL_D1_ID_AFTER_CREATING",
+      "database_id": "fbe6a12c-dc63-4898-ad08-45791264647a",
       "migrations_dir": "./drizzle"
     }
   ]
