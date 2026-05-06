@@ -28,6 +28,7 @@ wrangler.local.toml
 
 # Claude Code (local-only settings; shared ones live in settings.json)
 .claude/settings.local.json
+.claude/worktrees/
 
 # OS
 .DS_Store

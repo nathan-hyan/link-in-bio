@@ -12,6 +12,12 @@ export default defineWorkersConfig(async () => {
   return {
     test: {
       setupFiles: ["./test/apply-migrations.ts"],
+      exclude: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/.{git,react-router,wrangler,claude}/**",
+      ],
       poolOptions: {
         workers: {
           isolatedStorage: true,

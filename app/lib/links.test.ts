@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { getDb } from "../db/client";
 import { links } from "../db/schema";
-import { getEnabledLinks } from "./links";
+import { getEnabledLinks, getEnabledLinkBySlug } from "./links";
 
 describe("getEnabledLinks", () => {
   const db = getDb(env.DB);
@@ -95,5 +95,43 @@ describe("getEnabledLinks", () => {
       "youtube",
       "spotify",
     ]);
+  });
+});
+
+describe("getEnabledLinkBySlug", () => {
+  const db = getDb(env.DB);
+
+  beforeEach(async () => {
+    await db.delete(links);
+  });
+
+  it("returns null when slug does not exist", async () => {
+    expect(await getEnabledLinkBySlug(db, "nope")).toBeNull();
+  });
+
+  it("returns null when slug exists but is disabled", async () => {
+    await db.insert(links).values({
+      slug: "instagram",
+      label: "Instagram",
+      url: "https://instagram.com/x",
+      position: 1,
+      enabled: false,
+    });
+    expect(await getEnabledLinkBySlug(db, "instagram")).toBeNull();
+  });
+
+  it("returns the link when slug exists and is enabled", async () => {
+    await db.insert(links).values({
+      slug: "spotify",
+      label: "Spotify",
+      url: "https://open.spotify.com/artist/x",
+      position: 1,
+      enabled: true,
+    });
+
+    const result = await getEnabledLinkBySlug(db, "spotify");
+    expect(result).not.toBeNull();
+    expect(result?.url).toBe("https://open.spotify.com/artist/x");
+    expect(result?.label).toBe("Spotify");
   });
 });
