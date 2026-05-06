@@ -130,5 +130,5 @@ pnpm db:migrate:local     # apply migrations to local D1
 pnpm db:migrate:prod      # apply migrations to production D1 (used by CI)
 pnpm db:seed:local        # seed local D1 with the 5 platforms
 pnpm db:seed:prod         # seed production D1 (used by CI, idempotent)
-pnpm deploy               # build + wrangler deploy (used by CI)
+pnpm run deploy           # build + wrangler deploy (used by CI). NOTE: `pnpm deploy` without `run` is a pnpm-builtin command and does NOT run this script.
 ```
