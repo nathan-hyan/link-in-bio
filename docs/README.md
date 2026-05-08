@@ -56,5 +56,5 @@ Anything non-obvious for future-me reading this cold.
 - [`03-outbound-tracking.md`](03-outbound-tracking.md) — `/out/:slug` redirect handler, `link_click` events
 - [`04-backoffice-auth.md`](04-backoffice-auth.md) — Cloudflare Access wiring on `/admin/**`
 - [`05-admin-background.md`](05-admin-background.md) — `settings` table + `/admin/settings`, public page reads bg URL from D1
-- `06-backoffice-links.md` — Link CRUD UI *(not yet implemented)*
+- [`06-backoffice-links.md`](06-backoffice-links.md) — Link CRUD UI at `/admin`
 - `07-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*
