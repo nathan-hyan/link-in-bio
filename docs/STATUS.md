@@ -32,38 +32,7 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 
 In dependency order. Each is one PR cycle (branch `feat/NN-name`, TDD where it fits, doc updated alongside, PR for the React parts).
 
-### Next up: 06 — Backoffice link CRUD
-
-**Goal:** the admin can add, edit, reorder, enable/disable, and delete links from `/admin`.
-
-**Code surface:**
-- `app/routes/admin._index.tsx` — replace the placeholder with the full table view of all links (enabled + disabled): slug, label, URL, position, toggle, edit, delete.
-- Up/down arrows for ordering (no drag-and-drop in MVP — defer).
-- "Add link" form with auto-suggested slug from label, slug uniqueness validation, slug pattern `^[a-z0-9-]+$`.
-- Edit via modal.
-- Action handler module (`app/lib/admin-links.ts` or similar) covering: create, update (incl. enabled toggle), delete, swap-positions.
-- **Last-link guard** (already specced in CLAUDE.md): action returns 422 if disable/delete would leave zero enabled links (would 503 the public page).
-- **Reserved-slug guard:** the create/update action must reject slugs that collide with literal admin or system routes — at minimum `admin`, `out`, `api`, `settings`. Document in the feature doc.
-
-**Tests:**
-- TDD on action handlers (real D1):
-  - create with valid input
-  - create rejects duplicate slug
-  - create rejects invalid slug pattern
-  - create rejects reserved slugs (`admin`, `out`, `api`, `settings`)
-  - update enables/disables
-  - delete removes the row
-  - delete rejected (422) when target is the last enabled link
-  - disable rejected (422) when target is the last enabled link
-  - swap-positions changes ordering as expected
-
-**UI considerations:**
-- This is the most React-heavy feature. PR review surface is bigger.
-- Reuse the Feature 05 form pattern (`<Form method="post">` + action + `useNavigation`).
-
----
-
-### 07 — Analytics dashboard
+### Next up: 07 — Analytics dashboard
 
 **Goal:** at `/admin/analytics`, surface what's happening: views, clicks, sources, destinations, geography.
 
