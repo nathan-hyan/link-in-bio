@@ -71,6 +71,10 @@ If no links are enabled the loader throws `new Response(null, { status: 503 })`.
 
 This feature shipped buttons as `<a href={link.url} target="_blank">`. Feature 03 swapped this for `/out/:slug?source=:source` so clicks go through the redirect handler and get logged. The route file `app/routes/home.tsx` therefore now bears multi-feature ownership; current button-rendering behavior lives in [03-outbound-tracking.md](03-outbound-tracking.md).
 
+### Frosted-glass card around the content
+
+Logo, tagline, and button list are wrapped in a single `<section>` with `bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40` so the content reads cleanly over any background image (the visitor's eye doesn't have to fight a busy bg). The card width is constrained (`max-w-md` on phones, `max-w-2xl` on tablets+); the buttons inside the card stack on mobile and wrap-row from `sm:` up. Buttons keep their solid white surface so they pop against the translucent card.
+
 ### Test isolation strategy
 
 `isolatedStorage: true` in the workers pool config makes Miniflare roll back D1 changes between tests inside the same file. Combined with explicit `beforeEach` (delete from links), every test starts from a clean schema. No global teardown needed.
