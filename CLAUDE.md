@@ -186,7 +186,7 @@ Generic key/value table for site-wide configuration. Currently used only for `bg
 - [`docs/04-backoffice-auth.md`](docs/04-backoffice-auth.md) — Cloudflare Access wiring on `/admin/**`
 - [`docs/05-admin-background.md`](docs/05-admin-background.md) — `settings` table + `/admin/settings`, public page reads bg URL from D1
 - [`docs/06-backoffice-links.md`](docs/06-backoffice-links.md) — Link CRUD UI at `/admin`
-- `docs/07-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*
+- [`docs/07-backoffice-analytics.md`](docs/07-backoffice-analytics.md) — Analytics dashboard at `/admin/analytics`
 
 ---
 
