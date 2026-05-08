@@ -61,12 +61,12 @@ The composed loader is **not** integration-tested. Per CLAUDE.md testing strateg
 ## Dependencies
 
 **Depends on:**
-- 00-foundation — `events` table, Drizzle, vitest pool-workers
-- 01-public-page — `getEnabledLinks`, the home route file
+- [00-foundation](00-foundation.md) — `events` table, Drizzle, vitest pool-workers
+- [01-public-page](01-public-page.md) — `getEnabledLinks`, the home route file
 
 **Depended on by:**
-- 03-outbound-tracking will reuse `app/lib/events.ts` — adding `logLinkClick` alongside `logPageView` (same module, same insert pattern, different `type`).
-- 06-backoffice-analytics aggregates `events.source`, `events.raw_path`, etc.
+- [03-outbound-tracking](03-outbound-tracking.md) — reuses `app/lib/events.ts` (adds `logLinkClick` alongside `logPageView`) and consumes the `source` value the home loader now emits, carrying it into button hrefs as `?source=:source`.
+- 06-backoffice-analytics will aggregate `events.source`, `events.raw_path`, etc. *(not yet implemented)*
 
 ## Notes / Decisions
 

@@ -8,7 +8,7 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 
 - **GitHub account:** ALWAYS use the `nathan-hyan` GitHub account. NEVER the `exequiel-mleziva` (MasterClass) account. Before every `gh` command, run `gh auth status` and confirm `Active account: true` is on `nathan-hyan`. Switch with `gh auth switch -u nathan-hyan` if not.
 - **Living docs:** the source of truth for each feature's design, files, and connections lives in `docs/NN-feature.md`. ALWAYS read the relevant doc(s) first before changing a feature. ALWAYS update the doc as part of the same change. Out-of-date docs are a bug.
-- **Onboarding contract:** any agent (or human) should be able to read `CLAUDE.md` + the relevant `docs/*.md` and have full context — no other files required for design intent.
+- **Onboarding contract:** any agent (or human) should be able to read this file + [`docs/STATUS.md`](docs/STATUS.md) + the relevant `docs/NN-*.md` for the feature being touched and have full context — no other files required for design intent. **Start at `docs/STATUS.md`** for current state and remaining to-do.
 
 ---
 
@@ -94,7 +94,7 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 
 ## Public page
 
-- Reuses existing `assets/bg.png` (background) and `assets/hyan_logo.svg` (logo). "est. 1995" tagline preserved.
+- Reuses `public/bg.png` (background) and `public/hyan_logo.svg` (logo) — served as static assets at `/bg.png` and `/hyan_logo.svg`. "est. 1995" tagline preserved.
 - Buttons rendered from `links` where `enabled = true`, ordered by `position`.
 - **Source-platform reorder:** if the inbound source matches an enabled link slug, that button is moved to the LAST position (visually identical, just deprioritized — visitor already came from there).
 - Mobile-first responsive. Heavy mobile traffic expected.
@@ -136,8 +136,8 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 - Captures: `country` (CF-IPCountry), `user_agent`, `referrer`.
 
 ### Outbound (link_click)
-- Buttons render as `<a href="/out/:slug">`.
-- `/out/:slug` handler: looks up link by slug → logs `link_click` event with `clicked_slug` → 302 redirect to the link's `url`. Returns 404 if slug unknown.
+- Buttons render as `<a href="/out/:slug?source=:source">` — the source from the page that rendered the button is carried in the query string so the redirect handler doesn't depend on the `Referer` header (which can be stripped).
+- `/out/:slug` handler: looks up link by slug (enabled only) → logs `link_click` event with `clicked_slug` and `source` from the query → 302 redirect to the link's `url`. Returns 404 if slug unknown or disabled.
 - Captures same context (country, user_agent, referrer) as page_view.
 
 ---
@@ -157,9 +157,9 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 - **Local dev:** `wrangler dev` runs Workers locally with a local D1 SQLite file.
 - **Migrations:** `pnpm drizzle-kit generate` produces SQL; `wrangler d1 migrations apply hyan-linkbio` applies them.
 - **Seed:** idempotent SQL (`INSERT OR IGNORE` on slug uniqueness) populates the 5 starting platforms (Instagram, YouTube, Apple Music, Bandcamp, Spotify). Safe to run on every deploy.
-- **CI/CD:** GitHub Actions.
+- **CI/CD:** GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
   - On PR: `pnpm test` + `pnpm typecheck`
-  - On merge to `main`: `wrangler deploy`
+  - On merge to `main`: `pnpm db:migrate:prod` → `pnpm db:seed:prod` (idempotent) → `pnpm run deploy` (note: `pnpm run`, not `pnpm`, because `pnpm deploy` is a built-in command)
   - Cloudflare API token in repo secrets as `CLOUDFLARE_API_TOKEN`.
 - **Repo:** `nathan-hyan/link-in-bio` (public).
 
@@ -169,17 +169,18 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 
 (Each file uses the template in `docs/README.md`.)
 
-- `docs/00-foundation.md` — Project scaffold, tooling, configs, first deploy
-- `docs/01-public-page.md` — Public page rendering from D1
-- `docs/02-source-tracking.md` — Inbound `/:slug` route, source resolution, page_view events
-- `docs/03-outbound-tracking.md` — `/out/:slug` redirect handler, link_click events
-- `docs/04-backoffice-auth.md` — Cloudflare Access wiring on `/admin/**`
-- `docs/05-backoffice-links.md` — Link CRUD UI
-- `docs/06-backoffice-analytics.md` — Analytics dashboard
+- [`docs/STATUS.md`](docs/STATUS.md) — **Current state + remaining to-do + known quirks. Start here.**
+- [`docs/00-foundation.md`](docs/00-foundation.md) — Project scaffold, tooling, configs, first deploy
+- [`docs/01-public-page.md`](docs/01-public-page.md) — Public page rendering from D1
+- [`docs/02-source-tracking.md`](docs/02-source-tracking.md) — Inbound `/:slug?` route, source resolution, page_view events
+- [`docs/03-outbound-tracking.md`](docs/03-outbound-tracking.md) — `/out/:slug` redirect handler, link_click events
+- `docs/04-backoffice-auth.md` — Cloudflare Access wiring on `/admin/**` *(not yet implemented)*
+- `docs/05-backoffice-links.md` — Link CRUD UI *(not yet implemented)*
+- `docs/06-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*
 
 ---
 
 ## Post-MVP punch list
 
 - [ ] OG image (1200×630) — currently no social preview card
-- [ ] Favicon set generated from `assets/hyan_logo.svg`
+- [ ] Favicon set generated from `public/hyan_logo.svg`

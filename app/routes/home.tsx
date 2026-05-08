@@ -32,11 +32,11 @@ export async function loader({
 
   await logPageView({ db, source, rawPath, request });
 
-  return { links: reorderForSource(links, source) };
+  return { links: reorderForSource(links, source), source };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { links } = loaderData;
+  const { links, source } = loaderData;
 
   return (
     <main
@@ -56,7 +56,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         {links.map((link) => (
           <li key={link.slug} className="sm:flex-shrink-0">
             <a
-              href={link.url}
+              href={`/out/${link.slug}?source=${encodeURIComponent(source)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-3 bg-white hover:bg-gray-100 active:bg-gray-200 rounded-lg text-gray-700 hover:text-gray-900 text-center font-medium transition-colors"

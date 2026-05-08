@@ -2,7 +2,9 @@
 
 Living documentation for each feature. **Read first, edit alongside, keep current.**
 
-The files here are the source of truth for design intent, file ownership, routes, schema impact, and test coverage. Any agent (or human) picking up work on this codebase should be able to read `CLAUDE.md` + the relevant `docs/*.md` and have full context.
+The files here are the source of truth for design intent, file ownership, routes, schema impact, and test coverage. Any agent (or human) picking up work on this codebase should be able to read `CLAUDE.md` + this folder and have full context.
+
+> **First time here?** Open [STATUS.md](STATUS.md) — it lists what's currently shipped, what's next on the to-do list, and known quirks.
 
 ## Rules
 
@@ -47,12 +49,11 @@ Anything non-obvious for future-me reading this cold.
 
 ## Index
 
-(Mirrors the index in `CLAUDE.md`.)
-
-- `00-foundation.md` — Project scaffold, tooling, configs, first deploy
-- `01-public-page.md` — Public page rendering from D1
-- `02-source-tracking.md` — Inbound `/:slug` route, source resolution, page_view events
-- `03-outbound-tracking.md` — `/out/:slug` redirect handler, link_click events
-- `04-backoffice-auth.md` — Cloudflare Access wiring on `/admin/**`
-- `05-backoffice-links.md` — Link CRUD UI
-- `06-backoffice-analytics.md` — Analytics dashboard
+- [`STATUS.md`](STATUS.md) — **Current state + remaining to-do + known quirks.** Read this first.
+- [`00-foundation.md`](00-foundation.md) — Project scaffold, tooling, configs, first deploy
+- [`01-public-page.md`](01-public-page.md) — Public page rendering from D1
+- [`02-source-tracking.md`](02-source-tracking.md) — Inbound `/:slug?` route, source resolution, `page_view` events
+- [`03-outbound-tracking.md`](03-outbound-tracking.md) — `/out/:slug` redirect handler, `link_click` events
+- `04-backoffice-auth.md` — Cloudflare Access wiring on `/admin/**` *(not yet implemented)*
+- `05-backoffice-links.md` — Link CRUD UI *(not yet implemented)*
+- `06-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*

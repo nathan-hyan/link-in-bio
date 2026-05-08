@@ -4,7 +4,7 @@
 
 Render the public landing at `/` from D1: logo, tagline, and one button per enabled link in `position` order. Returns **503** if zero links are enabled (per CLAUDE.md spec — the page is broken without buttons, signal it loudly).
 
-This feature delivers the read path only. Source-aware reordering (Feature 02) and outbound-click tracking (Feature 03) come later — for now the buttons link directly to the destination URL with `target="_blank"`.
+This feature delivers the read path. Source-aware reordering and `?source=` URL annotation are added in [Feature 02](02-source-tracking.md); button hrefs are routed through `/out/:slug` in [Feature 03](03-outbound-tracking.md). The descriptions below reflect what Feature 01 owned at the time it was built — see those follow-up docs for current button rendering behavior.
 
 ## Files
 
@@ -58,8 +58,8 @@ UI rendering is **not unit-tested** (per the testing strategy in CLAUDE.md — R
 - 00-foundation — schema, Drizzle client, seed, public assets, vitest pool-workers setup
 
 **Depended on by:**
-- 02-source-tracking will modify the loader to also resolve a source slug from the path and reorder buttons
-- 03-outbound-tracking will replace the direct button URLs with `/out/:slug`
+- [02-source-tracking](02-source-tracking.md) — extended the home loader to resolve a source slug from `params.slug` and reorder the matching button to last
+- [03-outbound-tracking](03-outbound-tracking.md) — replaced the direct button hrefs with `/out/:slug?source=:source`
 
 ## Notes / Decisions
 
@@ -67,9 +67,9 @@ UI rendering is **not unit-tested** (per the testing strategy in CLAUDE.md — R
 
 If no links are enabled the loader throws `new Response(null, { status: 503 })`. Per spec: the page is broken without buttons — signaling 503 surfaces it to anyone watching uptime. The backoffice last-link guard (Feature 05) prevents the user from reaching this state through normal use. **No event is logged on the 503 path** (a broken render isn't meaningful analytics).
 
-### Buttons link directly (for now)
+### Buttons originally linked directly to the destination
 
-`<a href={link.url} target="_blank" rel="noopener noreferrer">`. Feature 03 will swap `href` to `/out/:slug` once the redirect handler exists.
+This feature shipped buttons as `<a href={link.url} target="_blank">`. Feature 03 swapped this for `/out/:slug?source=:source` so clicks go through the redirect handler and get logged. The route file `app/routes/home.tsx` therefore now bears multi-feature ownership; current button-rendering behavior lives in [03-outbound-tracking.md](03-outbound-tracking.md).
 
 ### Test isolation strategy
 

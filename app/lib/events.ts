@@ -25,3 +25,24 @@ export async function logPageView({
     referrer: header(request, "referer"),
   });
 }
+
+export async function logLinkClick({
+  db,
+  clickedSlug,
+  source,
+  request,
+}: {
+  db: Db;
+  clickedSlug: string;
+  source: string;
+  request: Request;
+}): Promise<void> {
+  await db.insert(events).values({
+    type: "link_click",
+    source,
+    clickedSlug,
+    country: header(request, "cf-ipcountry"),
+    userAgent: header(request, "user-agent"),
+    referrer: header(request, "referer"),
+  });
+}
