@@ -40,32 +40,34 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <main
-      className="min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center px-4 py-12"
+      className="min-h-screen w-full flex items-center justify-center bg-cover bg-center px-4 py-12"
       style={{ backgroundImage: "url('/bg.png')" }}
     >
-      <div className="text-center mb-8">
-        <img
-          src="/hyan_logo.svg"
-          alt="Hy-An"
-          className="mx-auto mb-4 w-48 h-48 sm:w-64 sm:h-64"
-        />
-        <p className="text-gray-700">est. 1995</p>
-      </div>
+      <section className="w-full max-w-md sm:max-w-2xl bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-12">
+        <div className="text-center mb-8">
+          <img
+            src="/hyan_logo.svg"
+            alt="Hy-An"
+            className="mx-auto mb-4 w-40 h-40 sm:w-56 sm:h-56"
+          />
+          <p className="text-gray-800">est. 1995</p>
+        </div>
 
-      <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 justify-center w-full max-w-md sm:max-w-2xl">
-        {links.map((link) => (
-          <li key={link.slug} className="sm:flex-shrink-0">
-            <a
-              href={`/out/${link.slug}?source=${encodeURIComponent(source)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-3 bg-white hover:bg-gray-100 active:bg-gray-200 rounded-lg text-gray-700 hover:text-gray-900 text-center font-medium transition-colors"
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
+        <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 justify-center">
+          {links.map((link) => (
+            <li key={link.slug} className="sm:flex-shrink-0">
+              <a
+                href={`/out/${link.slug}?source=${encodeURIComponent(source)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-3 bg-white hover:bg-gray-100 active:bg-gray-200 rounded-lg text-gray-700 hover:text-gray-900 text-center font-medium shadow-sm transition-colors"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
     </main>
   );
 }
