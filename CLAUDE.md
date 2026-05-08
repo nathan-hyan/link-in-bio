@@ -90,6 +90,15 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 
 **No IPs stored.** Country only.
 
+### `settings`
+| Column | Type | Notes |
+|---|---|---|
+| `key` | text PK | e.g. `bg_image_url` |
+| `value` | text | |
+| `updated_at` | timestamp | refreshed on every upsert |
+
+Generic key/value table for site-wide configuration. Currently used only for `bg_image_url` (changeable from `/admin/settings`); future settings (favicon URL, OG image URL, etc.) plug in the same way without migrations.
+
 ---
 
 ## Public page
@@ -174,9 +183,10 @@ A single-tenant link-in-bio site for the Hy-An music project, served from `link-
 - [`docs/01-public-page.md`](docs/01-public-page.md) — Public page rendering from D1
 - [`docs/02-source-tracking.md`](docs/02-source-tracking.md) — Inbound `/:slug?` route, source resolution, page_view events
 - [`docs/03-outbound-tracking.md`](docs/03-outbound-tracking.md) — `/out/:slug` redirect handler, link_click events
-- `docs/04-backoffice-auth.md` — Cloudflare Access wiring on `/admin/**` *(not yet implemented)*
-- `docs/05-backoffice-links.md` — Link CRUD UI *(not yet implemented)*
-- `docs/06-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*
+- [`docs/04-backoffice-auth.md`](docs/04-backoffice-auth.md) — Cloudflare Access wiring on `/admin/**`
+- [`docs/05-admin-background.md`](docs/05-admin-background.md) — `settings` table + `/admin/settings`, public page reads bg URL from D1
+- `docs/06-backoffice-links.md` — Link CRUD UI *(not yet implemented)*
+- `docs/07-backoffice-analytics.md` — Analytics dashboard *(not yet implemented)*
 
 ---
 

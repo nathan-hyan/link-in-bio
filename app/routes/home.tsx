@@ -2,6 +2,7 @@ import type { Route } from "./+types/home";
 import { getDb } from "../db/client";
 import { logPageView } from "../lib/events";
 import { getEnabledLinks } from "../lib/links";
+import { getBgImageUrl } from "../lib/settings";
 import { reorderForSource } from "../lib/source-reorder";
 import { resolveSource } from "../lib/source-resolution";
 
@@ -21,7 +22,10 @@ export async function loader({
   request,
 }: Route.LoaderArgs) {
   const db = getDb(context.cloudflare.env.DB);
-  const links = await getEnabledLinks(db);
+  const [links, bgImageUrl] = await Promise.all([
+    getEnabledLinks(db),
+    getBgImageUrl(db),
+  ]);
 
   if (links.length === 0) {
     throw new Response(null, { status: 503 });
@@ -32,16 +36,16 @@ export async function loader({
 
   await logPageView({ db, source, rawPath, request });
 
-  return { links: reorderForSource(links, source), source };
+  return { links: reorderForSource(links, source), source, bgImageUrl };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { links, source } = loaderData;
+  const { links, source, bgImageUrl } = loaderData;
 
   return (
     <main
       className="min-h-screen w-full flex items-center justify-center bg-cover bg-center px-4 py-12"
-      style={{ backgroundImage: "url('/bg.png')" }}
+      style={{ backgroundImage: `url('${bgImageUrl}')` }}
     >
       <section className="w-full max-w-md sm:max-w-2xl bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-12">
         <div className="text-center mb-8">

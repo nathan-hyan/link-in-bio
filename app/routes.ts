@@ -5,6 +5,7 @@ export default [
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("analytics", "routes/admin.analytics.tsx"),
+    route("settings", "routes/admin.settings.tsx"),
   ]),
   route(":slug?", "routes/home.tsx"),
 ] satisfies RouteConfig;

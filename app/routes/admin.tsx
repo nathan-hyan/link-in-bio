@@ -25,6 +25,9 @@ export default function AdminLayout() {
             <NavLink to="/admin/analytics" className={navLinkClass}>
               Analytics
             </NavLink>
+            <NavLink to="/admin/settings" className={navLinkClass}>
+              Settings
+            </NavLink>
             <a
               href="/"
               className="text-gray-500 hover:text-gray-900 transition-colors"

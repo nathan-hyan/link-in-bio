@@ -8,6 +8,13 @@
       "when": 1778086977295,
       "tag": "0000_public_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778269090419,
+      "tag": "0001_glossy_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

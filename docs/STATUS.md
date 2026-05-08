@@ -2,7 +2,7 @@
 
 > **For new agents picking this up:** read [CLAUDE.md](../CLAUDE.md) (workflow + spec), then this file for current state and remaining work, then the relevant `docs/NN-*.md` for any feature you touch. Don't forget the GitHub-account rule (use `nathan-hyan`, never the MasterClass account — see project memory).
 
-Last updated: 2026-05-06
+Last updated: 2026-05-08
 
 ---
 
@@ -16,6 +16,9 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 | 01 | [Public page](01-public-page.md) — renders enabled links from D1 in `position` order; HTTP 503 if zero | ✅ shipped |
 | 02 | [Source tracking](02-source-tracking.md) — `/:slug?` resolves source via whitelist, logs `page_view`, reorders matching button last | ✅ shipped |
 | 03 | [Outbound tracking](03-outbound-tracking.md) — `/out/:slug` logs `link_click` then 302s; 404 if missing/disabled | ✅ shipped |
+| 04 | [Backoffice auth](04-backoffice-auth.md) — `/admin/**` route shells + Cloudflare Access policy at the edge | ✅ shipped |
+| — | Frosted-glass card around the public page content (small UI polish) | ✅ shipped |
+| 05 | [Admin background setting](05-admin-background.md) — generic `settings` table + `/admin/settings` form, public page reads `bg_image_url` from D1 | ✅ shipped |
 
 **Operational state:**
 - D1 prod database `hyan-linkbio` (id `fbe6a12c-dc63-4898-ad08-45791264647a`)
@@ -29,45 +32,25 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 
 In dependency order. Each is one PR cycle (branch `feat/NN-name`, TDD where it fits, doc updated alongside, PR for the React parts).
 
-### Next up: 04 — Cloudflare Access on `/admin/**`
-
-**Goal:** gate the entire `/admin/*` URL space at the Cloudflare edge so the admin UI requires login without any auth code in the app.
-
-**Code surface:**
-- New routes: `app/routes/admin._index.tsx` (placeholder), `app/routes/admin.analytics.tsx` (placeholder). Both as parented under `admin.tsx` layout.
-- `app/routes.ts` registers them.
-- Routes need only stub content for this feature — Features 05 and 06 fill them in.
-
-**Cloudflare-side configuration (manual, you do this):**
-- Cloudflare Zero Trust → Access → Applications → Add application → "Self-hosted"
-- Application domain: `link-in-bio.hyan.dev/admin*`
-- Identity provider: Email OTP or Google (your choice)
-- Policy: include rule = your specific email (`exequiel@hyan.dev` or whatever) so only you authenticate
-- Zero Trust is free up to 50 users, doesn't require a paid CF plan
-
-**Tests:** `app/lib/**` doesn't change in this feature, so no new vitest cases. Verify manually that `/admin` requires login while `/` doesn't.
-
-**Optional:** read `Cf-Access-Jwt-Assertion` header in `/admin` loaders if we ever want the app to know the authed user. For a single-tenant single-admin site this is not needed.
-
----
-
-### 05 — Backoffice link CRUD
+### Next up: 06 — Backoffice link CRUD
 
 **Goal:** the admin can add, edit, reorder, enable/disable, and delete links from `/admin`.
 
 **Code surface:**
-- `app/routes/admin._index.tsx` — table view of all links (enabled + disabled), with: slug, label, URL, position, toggle, edit, delete
-- Up/down arrows for ordering (no drag-and-drop in MVP — defer)
-- "Add link" form with auto-suggested slug from label, slug uniqueness validation, slug pattern `^[a-z0-9-]+$`
-- Edit via modal
-- Action handler module (`app/lib/admin-links.ts` or similar) covering: create, update (incl. enabled toggle), delete, swap-positions
-- **Last-link guard** (already specced in CLAUDE.md): action returns 422 if disable/delete would leave zero enabled links (would 503 the public page)
+- `app/routes/admin._index.tsx` — replace the placeholder with the full table view of all links (enabled + disabled): slug, label, URL, position, toggle, edit, delete.
+- Up/down arrows for ordering (no drag-and-drop in MVP — defer).
+- "Add link" form with auto-suggested slug from label, slug uniqueness validation, slug pattern `^[a-z0-9-]+$`.
+- Edit via modal.
+- Action handler module (`app/lib/admin-links.ts` or similar) covering: create, update (incl. enabled toggle), delete, swap-positions.
+- **Last-link guard** (already specced in CLAUDE.md): action returns 422 if disable/delete would leave zero enabled links (would 503 the public page).
+- **Reserved-slug guard:** the create/update action must reject slugs that collide with literal admin or system routes — at minimum `admin`, `out`, `api`, `settings`. Document in the feature doc.
 
 **Tests:**
 - TDD on action handlers (real D1):
   - create with valid input
   - create rejects duplicate slug
   - create rejects invalid slug pattern
+  - create rejects reserved slugs (`admin`, `out`, `api`, `settings`)
   - update enables/disables
   - delete removes the row
   - delete rejected (422) when target is the last enabled link
@@ -76,12 +59,11 @@ In dependency order. Each is one PR cycle (branch `feat/NN-name`, TDD where it f
 
 **UI considerations:**
 - This is the most React-heavy feature. PR review surface is bigger.
-- Forms use RR's `<Form>` and `useNavigation` for pending states.
-- Admin nav links to `/admin/analytics` (Feature 06).
+- Reuse the Feature 05 form pattern (`<Form method="post">` + action + `useNavigation`).
 
 ---
 
-### 06 — Analytics dashboard
+### 07 — Analytics dashboard
 
 **Goal:** at `/admin/analytics`, surface what's happening: views, clicks, sources, destinations, geography.
 
