@@ -19,6 +19,10 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 | 04 | [Backoffice auth](04-backoffice-auth.md) — `/admin/**` route shells + Cloudflare Access policy at the edge | ✅ shipped |
 | — | Frosted-glass card around the public page content (small UI polish) | ✅ shipped |
 | 05 | [Admin background setting](05-admin-background.md) — generic `settings` table + `/admin/settings` form, public page reads `bg_image_url` from D1 | ✅ shipped |
+| 06 | [Backoffice link CRUD](06-backoffice-links.md) — `/admin` table with add / edit / reorder / toggle / delete; last-link guard, reserved-slug guard | ✅ shipped |
+| 07 | [Backoffice analytics](07-backoffice-analytics.md) — `/admin/analytics` Recharts dashboard; date range, headline numbers, time series, sources, destinations, source × destination matrix, top countries | ✅ shipped |
+
+**MVP complete.** Only the post-MVP punch list (OG image, favicon) remains from the original CLAUDE.md spec.
 
 **Operational state:**
 - D1 prod database `hyan-linkbio` (id `fbe6a12c-dc63-4898-ad08-45791264647a`)
@@ -30,35 +34,7 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 
 ## To do — remaining MVP features
 
-In dependency order. Each is one PR cycle (branch `feat/NN-name`, TDD where it fits, doc updated alongside, PR for the React parts).
-
-### Next up: 07 — Analytics dashboard
-
-**Goal:** at `/admin/analytics`, surface what's happening: views, clicks, sources, destinations, geography.
-
-**Code surface:**
-- `app/routes/admin.analytics.tsx` — loader runs all the aggregations against D1 and returns shaped data
-- Recharts components (admin bundle only — route-based code splitting handles this automatically)
-- `app/lib/analytics.ts` (or similar) — pure aggregator functions that take the raw event rows and return the dashboard shapes
-
-**Layout per CLAUDE.md spec:**
-- Date range selector (7d / 30d / 90d / all) — three preset buttons
-- Headline numbers (top of page): page views, link clicks, CTR
-- Recharts **time-series line chart** (top): views & clicks, daily buckets
-- Recharts **horizontal bar charts**: sources, destinations
-- **Source × destination matrix** (table, not heatmap chart — easier to read at this size)
-- **Countries table** — top 10 by page_view count
-
-**Tests:**
-- TDD on the aggregator functions in `app/lib/analytics.ts`:
-  - bucket events by day for the time series
-  - count by source / by destination
-  - cross-tab source × destination
-  - country tally
-  - filter by date range
-- Each function takes event rows (or accepts a `Db` and date range) and returns shaped data. Easy to unit-test against fixtures.
-
-**Performance:** all queries run live against D1 on each dashboard load. With expected traffic, every query should finish well under 50ms.
+**MVP complete.** All seven features from the original spec are shipped. The next thing to ship is in the post-MVP punch list below.
 
 ---
 
