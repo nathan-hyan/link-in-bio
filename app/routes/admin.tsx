@@ -5,6 +5,36 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: "Admin — Hy-An Link in Bio" }];
 }
 
+/**
+ * Hard gate for /admin/**. Cloudflare Access (configured in the dashboard)
+ * is supposed to challenge every request to /admin* at the edge and only
+ * forward authenticated ones to this Worker. When that policy is missing
+ * or misconfigured, the edge passes raw requests straight to us — exactly
+ * the situation that left /admin open in the wild. This loader is the
+ * defense in depth: in production, refuse any request that did not come
+ * through CF Access (which sets the `Cf-Access-Jwt-Assertion` header on
+ * every authenticated request). Local dev (`wrangler dev` on localhost)
+ * skips the check.
+ *
+ * NOTE: the dashboard-level CF Access policy is still the primary gate —
+ * it shows a real login UI. This 401 is the safety net.
+ */
+export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const isLocalDev =
+    url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (isLocalDev) return null;
+
+  const jwt = request.headers.get("cf-access-jwt-assertion");
+  if (!jwt) {
+    throw new Response(
+      "Cloudflare Access is not active on /admin*. Configure a self-hosted Access policy in the Cloudflare Zero Trust dashboard before this page can load. See docs/04-backoffice-auth.md.",
+      { status: 401, headers: { "Content-Type": "text/plain; charset=utf-8" } }
+    );
+  }
+  return null;
+}
+
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   isActive
     ? "text-gray-900 font-medium"
