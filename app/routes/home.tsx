@@ -52,7 +52,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       style={{ backgroundImage: `url('${bgImageUrl}')` }}
     >
       {/* Column on mobile (video drops to the bottom), row on desktop (video to the right). */}
-      <div className="w-full max-w-md lg:max-w-4xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 lg:gap-8">
+      <div className="w-full max-w-md lg:max-w-4xl flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 lg:gap-8">
         <section className="w-full max-w-md bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
           <div className="text-center mb-6">
             <img
@@ -80,11 +80,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </section>
 
         {latestVideo && (
-          <section className="w-full max-w-md bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
-            <h2 className="text-center text-gray-800 font-medium mb-4">
-              Latest release
-            </h2>
-            <div className="aspect-video w-full overflow-hidden rounded-lg shadow-sm">
+          <section className="w-full max-w-md flex flex-col bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
+            <div className="aspect-video lg:aspect-auto lg:flex-1 w-full overflow-hidden rounded-lg shadow-sm">
               <iframe
                 src={`https://www.youtube.com/embed/${latestVideo.id}`}
                 title={latestVideo.title || "Latest Hy-An video"}
