@@ -5,7 +5,10 @@ import { settings } from "../db/schema";
 import {
   DEFAULT_BG_IMAGE_URL,
   SETTING_BG_IMAGE_URL,
+  SETTING_LATEST_VIDEO_ID,
+  SETTING_LATEST_VIDEO_TITLE,
   getBgImageUrl,
+  getLatestVideo,
   getSetting,
   setSetting,
 } from "./settings";
@@ -59,5 +62,31 @@ describe("getBgImageUrl", () => {
   it("falls back to the default if the stored value is an empty string", async () => {
     await setSetting(db, SETTING_BG_IMAGE_URL, "");
     expect(await getBgImageUrl(db)).toBe(DEFAULT_BG_IMAGE_URL);
+  });
+});
+
+describe("getLatestVideo", () => {
+  const db = getDb(env.DB);
+
+  beforeEach(async () => {
+    await db.delete(settings);
+  });
+
+  it("returns null when no video has been fetched", async () => {
+    expect(await getLatestVideo(db)).toBeNull();
+  });
+
+  it("returns the stored id and title", async () => {
+    await setSetting(db, SETTING_LATEST_VIDEO_ID, "abc123");
+    await setSetting(db, SETTING_LATEST_VIDEO_TITLE, "Newest Track");
+    expect(await getLatestVideo(db)).toEqual({
+      id: "abc123",
+      title: "Newest Track",
+    });
+  });
+
+  it("defaults the title to an empty string when only the id is stored", async () => {
+    await setSetting(db, SETTING_LATEST_VIDEO_ID, "abc123");
+    expect(await getLatestVideo(db)).toEqual({ id: "abc123", title: "" });
   });
 });

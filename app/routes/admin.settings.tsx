@@ -6,7 +6,15 @@ import {
   BG_KV_KEY,
   validateImageUpload,
 } from "../lib/media-upload";
-import { SETTING_BG_IMAGE_URL, getBgImageUrl, setSetting } from "../lib/settings";
+import {
+  SETTING_BG_IMAGE_URL,
+  SETTING_LATEST_VIDEO_ID,
+  SETTING_LATEST_VIDEO_TITLE,
+  getBgImageUrl,
+  getLatestVideo,
+  setSetting,
+} from "../lib/settings";
+import { YOUTUBE_CHANNEL_ID, fetchLatestVideo } from "../lib/youtube";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Settings — Hy-An Admin" }];
@@ -14,12 +22,29 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const db = getDb(context.cloudflare.env.DB);
-  const bgImageUrl = await getBgImageUrl(db);
-  return { bgImageUrl };
+  const [bgImageUrl, latestVideo] = await Promise.all([
+    getBgImageUrl(db),
+    getLatestVideo(db),
+  ]);
+  return { bgImageUrl, latestVideo };
 }
 
 export async function action({ context, request }: Route.ActionArgs) {
   const formData = await request.formData();
+  const db = getDb(context.cloudflare.env.DB);
+
+  if (formData.get("intent") === "fetch-video") {
+    const video = await fetchLatestVideo();
+    if (!video) {
+      return {
+        videoError: "Couldn't fetch the latest video from the channel.",
+      };
+    }
+    await setSetting(db, SETTING_LATEST_VIDEO_ID, video.id);
+    await setSetting(db, SETTING_LATEST_VIDEO_TITLE, video.title);
+    return { videoOk: true as const, video };
+  }
+
   const file = formData.get("bgImageFile");
 
   const contentType = file instanceof File ? file.type : "";
@@ -37,7 +62,6 @@ export async function action({ context, request }: Route.ActionArgs) {
   });
 
   // Version the URL so browsers/CDN fetch the new image instead of a cached one.
-  const db = getDb(context.cloudflare.env.DB);
   await setSetting(db, SETTING_BG_IMAGE_URL, `${BG_IMAGE_PATH}?v=${Date.now()}`);
   return { ok: true as const };
 }
@@ -47,9 +71,18 @@ export default function AdminSettings({
   actionData,
 }: Route.ComponentProps) {
   const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
+  const submittingIntent =
+    navigation.state === "submitting"
+      ? navigation.formData?.get("intent")
+      : null;
+  const isUploading = navigation.state === "submitting" && submittingIntent !== "fetch-video";
+  const isFetchingVideo = submittingIntent === "fetch-video";
   const error = actionData && "error" in actionData ? actionData.error : null;
   const success = actionData && "ok" in actionData;
+  const videoError =
+    actionData && "videoError" in actionData ? actionData.videoError : null;
+  const videoOk = actionData && "videoOk" in actionData;
+  const latestVideo = loaderData.latestVideo;
 
   return (
     <section>
@@ -104,10 +137,70 @@ export default function AdminSettings({
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isUploading}
           className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
         >
-          {isSubmitting ? "Uploading…" : "Upload"}
+          {isUploading ? "Uploading…" : "Upload"}
+        </button>
+      </Form>
+
+      <hr className="my-8 border-gray-200 max-w-xl" />
+
+      <Form method="post" className="space-y-4 max-w-xl">
+        <input type="hidden" name="intent" value="fetch-video" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Latest YouTube video
+          </label>
+
+          {latestVideo ? (
+            <div className="mb-3">
+              <div className="aspect-video w-full max-w-md overflow-hidden rounded-md border border-gray-200 bg-gray-100">
+                <iframe
+                  src={`https://www.youtube.com/embed/${latestVideo.id}`}
+                  title={latestVideo.title || "Latest video"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Currently showing:{" "}
+                <span className="font-medium">
+                  {latestVideo.title || latestVideo.id}
+                </span>
+              </p>
+            </div>
+          ) : (
+            <p className="mb-3 text-sm text-gray-500">
+              No video set yet. Fetch the channel to pull the latest upload.
+            </p>
+          )}
+
+          <p className="text-sm text-gray-500">
+            Pulls the newest upload from the Hy-An channel (
+            <code className="text-xs">{YOUTUBE_CHANNEL_ID}</code>) and shows it
+            on the public page.
+          </p>
+        </div>
+
+        {videoError && (
+          <p className="text-red-600 text-sm" role="alert">
+            {videoError}
+          </p>
+        )}
+        {videoOk && !videoError && (
+          <p className="text-green-600 text-sm" role="status">
+            Updated to the latest video.
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={isFetchingVideo}
+          className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
+        >
+          {isFetchingVideo ? "Fetching…" : "Fetch channel"}
         </button>
       </Form>
     </section>

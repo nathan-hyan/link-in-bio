@@ -187,6 +187,7 @@ Generic key/value table for site-wide configuration. Currently used only for `bg
 - [`docs/05-admin-background.md`](docs/05-admin-background.md) — `settings` table + `/admin/settings`, public page reads bg URL from D1
 - [`docs/06-backoffice-links.md`](docs/06-backoffice-links.md) — Link CRUD UI at `/admin`
 - [`docs/07-backoffice-analytics.md`](docs/07-backoffice-analytics.md) — Analytics dashboard at `/admin/analytics`
+- [`docs/08-latest-video.md`](docs/08-latest-video.md) — Latest YouTube video embed on the public page + `/admin/settings` Fetch channel button
 
 ---
 
