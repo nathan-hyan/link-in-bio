@@ -100,9 +100,10 @@ Requirement was "THE video", i.e. a playable player, not another link button.
 The stored id goes into `https://www.youtube.com/embed/<id>` in an `<iframe>`.
 
 ### Layout
-Links card and video card are siblings in a flex container: `flex-col` on
-mobile (video below the links), `lg:flex-row lg:items-start` on desktop (video
-to the right). The player wrapper is always `aspect-video` — a locked 16:9 so
-the YouTube embed never gets cropped. No heading on the video card. When no
-video is stored the container holds a single `max-w-md` card — visually
-identical to the pre-feature page.
+Links card and video card sit in a responsive grid (`grid-cols-1` on mobile,
+`lg:grid-cols-12` on desktop, `max-w-6xl` centered). Mobile stacks them (video
+below the links); desktop splits the row **links `col-span-4` / video
+`col-span-8`**. The player wrapper is always `aspect-video` — a locked 16:9 so
+the YouTube embed is never cropped; on desktop its width comes from the 8-col
+span, which makes it large. No heading on the video card. When no video is
+stored the grid holds a single card — visually the same as the pre-feature page.

@@ -48,12 +48,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <main
-      className="min-h-screen w-full flex items-center justify-center bg-cover bg-center px-4 py-12"
+      className="min-h-screen w-full flex items-center justify-center bg-cover bg-center py-12 px-4 lg:px-0"
       style={{ backgroundImage: `url('${bgImageUrl}')` }}
     >
-      {/* Column on mobile (video drops to the bottom), row on desktop (video to the right). */}
-      <div className="w-full max-w-md lg:max-w-4xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 lg:gap-8">
-        <section className="w-full max-w-md bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
+      {/* Single column on mobile (video drops to the bottom); on desktop a 12-col grid:
+          links take 4 cols, video the remaining 8. The video keeps 16:9 off its col width. */}
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 items-center gap-6 lg:gap-8">
+        {/* Left Button Picker*/}
+        <section className="lg:col-span-4 bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
           <div className="text-center mb-6">
             <img
               src="/hyan_logo.svg"
@@ -80,14 +82,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </section>
 
         {latestVideo && (
-          <section className="w-full max-w-md bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 px-6 py-8 sm:px-10 sm:py-10">
-            <div className="aspect-video w-full overflow-hidden rounded-lg shadow-sm">
+          <section className="lg:h-full flex items-center lg:col-span-8 bg-white/40 backdrop-blur-md rounded-2xl shadow-xl ring-1 ring-white/40 overflow-hidden p-4 sm:p-6">
+            <div className="aspect-video w-full overflow-hidden rounded-lg lg:rounded-none shadow-sm">
               <iframe
                 src={`https://www.youtube.com/embed/${latestVideo.id}`}
                 title={latestVideo.title || "Latest Hy-An video"}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                className="h-full w-full"
+                className="h-full w-full rounded-lg"
               />
             </div>
           </section>
