@@ -2,6 +2,7 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   route("out/:slug", "routes/out-redirect.tsx"),
+  route("media/bg", "routes/bg-image.tsx"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("analytics", "routes/admin.analytics.tsx"),
