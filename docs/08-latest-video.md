@@ -2,13 +2,17 @@
 
 ## Purpose
 
-Show the Hy-An channel's newest upload as a real, playable embed on the public
-page — to the **right** of the links card on desktop, at the **bottom** on
-mobile. The video is chosen by the admin, not polled automatically: an admin
-presses **Fetch channel** in `/admin/settings`, the app pulls the channel RSS
-feed, and stores the newest video's id + title in the `settings` table. The
-public page embeds whatever is stored. No video stored → nothing renders (the
-page looks exactly as before).
+Show one chosen Hy-An video as a real, playable embed on the public page — to
+the **right** of the links card on desktop, at the **bottom** on mobile. The
+video is chosen by the admin, not polled automatically: an admin presses **Fetch
+channel** in `/admin/settings`, the app pulls the 10 most recent uploads from the
+channel RSS feed and renders them as a thumbnail picker; clicking one stores its
+id + title in the `settings` table. The public page embeds whatever is stored.
+No video stored → nothing renders (the page looks exactly as before).
+
+**Why a picker, not auto-pick-newest:** the uploads feed mixes in Shorts and
+doesn't flag them, so the newest entry is often a Short (useless on this page).
+Letting the admin choose sidesteps that — no fragile Shorts-detection heuristic.
 
 ## Files
 
@@ -16,23 +20,26 @@ page looks exactly as before).
 - `app/lib/youtube.ts` — **new**.
   - `YOUTUBE_CHANNEL_ID` — the Hy-An channel (`UCUuwO5OGUKD_W9tm-yrB_uQ`).
   - `channelFeedUrl(channelId?)` → `https://www.youtube.com/feeds/videos.xml?channel_id=…`.
-  - `parseLatestVideo(xml)` → `{ id, title } | null`. Pure. Regex over the RSS
-    (the Workers runtime has no `DOMParser`): first `<entry>` is the newest
-    upload; pulls its `<yt:videoId>` and `<title>`, decodes XML entities.
-  - `fetchLatestVideo(channelId?)` → fetches the feed and parses it; `null` on a
-    non-OK response.
-- `app/lib/youtube.test.ts` — **new**. 6 cases for `parseLatestVideo`: first
-  entry wins, entry title beats the channel title, entity decoding, no entries,
-  entry without a videoId, garbage input.
+  - `videoThumbnailUrl(id)` → `https://i.ytimg.com/vi/<id>/mqdefault.jpg` (picker thumbnails).
+  - `parseVideoList(xml, limit=10)` → `{ id, title }[]`, newest-first. Pure. Regex
+    over the RSS (the Workers runtime has no `DOMParser`); pulls each `<entry>`'s
+    `<yt:videoId>` and `<title>`, decodes XML entities, skips entries with no id.
+  - `fetchLatestVideos(channelId?, limit=10)` → fetches the feed and parses it;
+    `[]` on a non-OK response.
+- `app/lib/youtube.test.ts` — **new**. 7 cases for `parseVideoList`: newest-first
+  order, entry title beats the channel title, entity decoding, limit, skips
+  entries without a videoId, no entries, garbage input.
 - `app/lib/settings.ts` — **modified**. Adds `SETTING_LATEST_VIDEO_ID` /
   `SETTING_LATEST_VIDEO_TITLE` keys and `getLatestVideo(db) → { id, title } | null`
   (returns `null` when no id stored; title defaults to `""`).
 - `app/lib/settings.test.ts` — **modified**. +3 cases for `getLatestVideo`.
 - `app/routes/admin.settings.tsx` — **modified**. Loader also returns
-  `latestVideo`. Action branches on a hidden `intent` field: `fetch-video`
-  calls `fetchLatestVideo()` and upserts both settings; otherwise the existing
-  background-upload path runs. Component gains a second `<Form>` (a **Fetch
-  channel** button) with a preview embed of the current video.
+  `latestVideo` (the current selection). Action branches on a hidden `intent`
+  field: `fetch-video` returns the 10 recent uploads (`{ videos }`),
+  `set-video` reads the clicked video (JSON-encoded in the submit button's
+  `value`) and upserts both settings; otherwise the existing background-upload
+  path runs. Component shows the current embed, a **Fetch channel** button, and
+  — after a fetch — a thumbnail picker (`<button>` per video) that saves on click.
 - `app/routes/home.tsx` — **modified**. Loader adds `getLatestVideo` to its
   `Promise.all`. Layout wraps the links card + an optional video card in a
   `flex flex-col lg:flex-row` container (video stacks below on mobile, sits to
@@ -46,7 +53,8 @@ page looks exactly as before).
 
 | Path | Method | Behavior |
 |---|---|---|
-| `/admin/settings` | POST (`intent=fetch-video`) | Fetches the channel RSS, stores newest video id + title. Returns `{ videoOk, video }` or `{ videoError }`. CF Access required. |
+| `/admin/settings` | POST (`intent=fetch-video`) | Fetches the 10 recent uploads. Returns `{ videos }` or `{ videoError }`. CF Access required. |
+| `/admin/settings` | POST (`intent=set-video`) | Stores the chosen video's id + title. Returns `{ videoOk, video }` or `{ videoError }`. CF Access required. |
 | `/` | GET | Loader reads `getLatestVideo`; component renders the embed card when a video is stored (else nothing). |
 
 The background-upload POST on the same route is unchanged — the action tells the
@@ -60,11 +68,13 @@ the home + settings loaders.
 
 ## Tests
 
-- `app/lib/youtube.test.ts` (6) — pure parser, per the CLAUDE.md TDD rule.
+- `app/lib/youtube.test.ts` (7) — pure `parseVideoList`, per the CLAUDE.md TDD rule.
 - `app/lib/settings.test.ts` (+3) — `getLatestVideo` roundtrip / null / title default.
-- `fetchLatestVideo` (network) and the route wiring are **not** unit-tested;
-  the public embed was verified locally (`pnpm dev` + a seeded `latest_video_id`
-  → homepage emits `youtube.com/embed/<id>` inside an `aspect-video` card).
+- `fetchLatestVideos` (network) and the route wiring are **not** unit-tested;
+  verified locally against the real channel (`pnpm dev` → `POST intent=fetch-video`
+  returned 10 uploads with thumbnails) and the public embed was verified with a
+  seeded `latest_video_id` (homepage emits `youtube.com/embed/<id>` in an
+  `aspect-video` card).
 
 ## Dependencies
 

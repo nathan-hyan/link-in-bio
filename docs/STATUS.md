@@ -24,7 +24,7 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 | — | Hard-gate on `/admin/**` — loader in `app/routes/admin.tsx` returns 401 in production when the `Cf-Access-Jwt-Assertion` header is absent (defense-in-depth safety net if the dashboard Access policy drifts; localhost skips) | ✅ shipped |
 | — | Public page visual refresh — 2025 White Stroke logo, tightened logo box, vertically stacked buttons, `busqueda` background (`public/lib_bg_busqueda.png`) | ✅ shipped |
 | — | Bot/scanner analytics filter — `app/lib/page-view-filter.ts` skips logging scanner probes (`.env`, `config.json`, …) and bot user-agents; `public/robots.txt` added. See [02-source-tracking](02-source-tracking.md). Edge rules (Bot Fight Mode + WAF) still to be enabled in the CF dashboard | ✅ shipped (app-level) |
-| 08 | [Latest YouTube video](08-latest-video.md) — public page embeds the channel's newest upload (right on desktop, bottom on mobile); admin refreshes it via a **Fetch channel** button in `/admin/settings` (RSS → `settings` keys `latest_video_id`/`latest_video_title`) | ✅ shipped |
+| 08 | [Latest YouTube video](08-latest-video.md) — public page embeds one chosen video (right on desktop, bottom on mobile); admin **Fetch channel** in `/admin/settings` lists the 10 recent uploads as a thumbnail picker and clicking one saves it (RSS → `settings` keys `latest_video_id`/`latest_video_title`) | ✅ shipped |
 
 **MVP complete.** Only the post-MVP punch list (OG image, favicon) remains from the original CLAUDE.md spec.
 

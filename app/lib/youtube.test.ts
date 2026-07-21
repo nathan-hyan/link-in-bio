@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLatestVideo } from "./youtube";
+import { parseVideoList } from "./youtube";
 
 const FEED = (entries: string) =>
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -15,33 +15,44 @@ const ENTRY = (id: string, title: string) =>
     <title>${title}</title>
   </entry>`;
 
-describe("parseLatestVideo", () => {
-  it("returns the first entry's video id and title", () => {
-    const xml = FEED(ENTRY("abc123", "Newest Track") + ENTRY("old999", "Older"));
-    expect(parseLatestVideo(xml)).toEqual({ id: "abc123", title: "Newest Track" });
+describe("parseVideoList", () => {
+  it("returns entries newest-first with id and title", () => {
+    const xml = FEED(ENTRY("abc123", "Newest") + ENTRY("old999", "Older"));
+    expect(parseVideoList(xml)).toEqual([
+      { id: "abc123", title: "Newest" },
+      { id: "old999", title: "Older" },
+    ]);
   });
 
-  it("picks the first entry, not the channel-level title", () => {
+  it("uses the entry title, not the channel-level title", () => {
     const xml = FEED(ENTRY("vid1", "Actual Video Title"));
-    // The feed's own <title> is "Hy-An"; the entry title must win.
-    expect(parseLatestVideo(xml)?.title).toBe("Actual Video Title");
+    expect(parseVideoList(xml)[0].title).toBe("Actual Video Title");
   });
 
   it("decodes XML entities in the title", () => {
     const xml = FEED(ENTRY("vid1", "Rock &amp; Roll &#39;95&#39; &lt;live&gt;"));
-    expect(parseLatestVideo(xml)?.title).toBe("Rock & Roll '95' <live>");
+    expect(parseVideoList(xml)[0].title).toBe("Rock & Roll '95' <live>");
   });
 
-  it("returns null when there are no entries", () => {
-    expect(parseLatestVideo(FEED(""))).toBeNull();
+  it("respects the limit", () => {
+    const xml = FEED(
+      ENTRY("a", "1") + ENTRY("b", "2") + ENTRY("c", "3")
+    );
+    expect(parseVideoList(xml, 2).map((v) => v.id)).toEqual(["a", "b"]);
   });
 
-  it("returns null when an entry has no videoId", () => {
-    const xml = FEED(`<entry><title>No id here</title></entry>`);
-    expect(parseLatestVideo(xml)).toBeNull();
+  it("skips entries without a videoId, keeping the rest", () => {
+    const xml = FEED(
+      `<entry><title>No id</title></entry>` + ENTRY("good", "Has id")
+    );
+    expect(parseVideoList(xml)).toEqual([{ id: "good", title: "Has id" }]);
   });
 
-  it("returns null for garbage input", () => {
-    expect(parseLatestVideo("not xml at all")).toBeNull();
+  it("returns an empty array when there are no entries", () => {
+    expect(parseVideoList(FEED(""))).toEqual([]);
+  });
+
+  it("returns an empty array for garbage input", () => {
+    expect(parseVideoList("not xml at all")).toEqual([]);
   });
 });

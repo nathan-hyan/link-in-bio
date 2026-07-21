@@ -14,7 +14,11 @@ import {
   getLatestVideo,
   setSetting,
 } from "../lib/settings";
-import { YOUTUBE_CHANNEL_ID, fetchLatestVideo } from "../lib/youtube";
+import {
+  YOUTUBE_CHANNEL_ID,
+  fetchLatestVideos,
+  videoThumbnailUrl,
+} from "../lib/youtube";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Settings — Hy-An Admin" }];
@@ -33,15 +37,29 @@ export async function action({ context, request }: Route.ActionArgs) {
   const formData = await request.formData();
   const db = getDb(context.cloudflare.env.DB);
 
-  if (formData.get("intent") === "fetch-video") {
-    const video = await fetchLatestVideo();
-    if (!video) {
-      return {
-        videoError: "Couldn't fetch the latest video from the channel.",
-      };
+  const intent = formData.get("intent");
+
+  if (intent === "fetch-video") {
+    const videos = await fetchLatestVideos();
+    if (videos.length === 0) {
+      return { videoError: "Couldn't fetch any videos from the channel." };
+    }
+    return { videos };
+  }
+
+  if (intent === "set-video") {
+    const raw = formData.get("video");
+    let video: { id: string; title: string } | null = null;
+    try {
+      video = raw ? JSON.parse(String(raw)) : null;
+    } catch {
+      video = null;
+    }
+    if (!video?.id) {
+      return { videoError: "Something went wrong selecting that video." };
     }
     await setSetting(db, SETTING_LATEST_VIDEO_ID, video.id);
-    await setSetting(db, SETTING_LATEST_VIDEO_TITLE, video.title);
+    await setSetting(db, SETTING_LATEST_VIDEO_TITLE, video.title ?? "");
     return { videoOk: true as const, video };
   }
 
@@ -75,13 +93,17 @@ export default function AdminSettings({
     navigation.state === "submitting"
       ? navigation.formData?.get("intent")
       : null;
-  const isUploading = navigation.state === "submitting" && submittingIntent !== "fetch-video";
   const isFetchingVideo = submittingIntent === "fetch-video";
+  const isSelecting = submittingIntent === "set-video";
+  const isUploading =
+    navigation.state === "submitting" && !isFetchingVideo && !isSelecting;
   const error = actionData && "error" in actionData ? actionData.error : null;
   const success = actionData && "ok" in actionData;
   const videoError =
     actionData && "videoError" in actionData ? actionData.videoError : null;
   const videoOk = actionData && "videoOk" in actionData;
+  const candidates =
+    actionData && "videos" in actionData ? actionData.videos : null;
   const latestVideo = loaderData.latestVideo;
 
   return (
@@ -146,8 +168,7 @@ export default function AdminSettings({
 
       <hr className="my-8 border-gray-200 max-w-xl" />
 
-      <Form method="post" className="space-y-4 max-w-xl">
-        <input type="hidden" name="intent" value="fetch-video" />
+      <div className="space-y-4 max-w-xl">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Latest YouTube video
@@ -173,14 +194,14 @@ export default function AdminSettings({
             </div>
           ) : (
             <p className="mb-3 text-sm text-gray-500">
-              No video set yet. Fetch the channel to pull the latest upload.
+              No video set yet. Fetch the channel and pick one to display.
             </p>
           )}
 
           <p className="text-sm text-gray-500">
-            Pulls the newest upload from the Hy-An channel (
-            <code className="text-xs">{YOUTUBE_CHANNEL_ID}</code>) and shows it
-            on the public page.
+            Fetches the 10 most recent uploads from the Hy-An channel (
+            <code className="text-xs">{YOUTUBE_CHANNEL_ID}</code>). Pick the one
+            to show on the public page — Shorts appear here too, so skip them.
           </p>
         </div>
 
@@ -191,18 +212,62 @@ export default function AdminSettings({
         )}
         {videoOk && !videoError && (
           <p className="text-green-600 text-sm" role="status">
-            Updated to the latest video.
+            Public page updated.
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={isFetchingVideo}
-          className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
-        >
-          {isFetchingVideo ? "Fetching…" : "Fetch channel"}
-        </button>
-      </Form>
+        <Form method="post">
+          <input type="hidden" name="intent" value="fetch-video" />
+          <button
+            type="submit"
+            disabled={isFetchingVideo}
+            className="px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
+          >
+            {isFetchingVideo ? "Fetching…" : "Fetch channel"}
+          </button>
+        </Form>
+
+        {candidates && (
+          <Form method="post">
+            <input type="hidden" name="intent" value="set-video" />
+            <p className="text-sm text-gray-700 mb-2">
+              Click a video to display it:
+            </p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {candidates.map((v) => {
+                const isCurrent = latestVideo?.id === v.id;
+                return (
+                  <li key={v.id}>
+                    <button
+                      type="submit"
+                      name="video"
+                      value={JSON.stringify(v)}
+                      disabled={isSelecting}
+                      className={`block w-full text-left rounded-md border overflow-hidden transition-colors disabled:opacity-60 ${
+                        isCurrent
+                          ? "border-gray-900 ring-2 ring-gray-900"
+                          : "border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      <img
+                        src={videoThumbnailUrl(v.id)}
+                        alt=""
+                        className="aspect-video w-full object-cover bg-gray-100"
+                      />
+                      <span className="block px-2 py-2 text-xs text-gray-700">
+                        {isCurrent && (
+                          <span className="font-semibold">Current · </span>
+                        )}
+                        {v.title || v.id}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </Form>
+        )}
+      </div>
     </section>
   );
 }
