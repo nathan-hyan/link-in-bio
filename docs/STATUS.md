@@ -75,6 +75,12 @@ These are documented inline in CLAUDE.md / 00-foundation.md but collected here f
 ### `pnpm deploy` ≠ `pnpm run deploy`
 `pnpm deploy` is a built-in pnpm command (for workspaces). It does NOT run our `package.json::scripts.deploy`. Always use `pnpm run deploy`. CI yaml is correct; document and shell aliases should be too.
 
+### Failing Dependabot security runs (transitive dev deps — `ws`, `shell-quote`, `@babel/core`, `brace-expansion`)
+**Symptom:** the "Dependabot Updates" workflow shows recurring red failures on `main` for these packages. The regular `CI` workflow (test/typecheck/deploy) is unaffected.
+**Cause:** all are **transitive, dev-only** deps. `ws@8.18.0` is pinned by `miniflare` (the local Workers emulator, via `wrangler` / `@cloudflare/vite-plugin` / `@cloudflare/vitest-pool-workers` / `@react-router/dev`). The advisory needs `ws ≥ 8.21.0`, but the tree caps at 8.18.0, so Dependabot reports `security_update_not_possible` and errors. None of these ship in the deployed Worker (miniflare/babel/etc. are build/dev tooling only) → **no production attack surface.**
+**Decision:** left as-is (not worth a `pnpm.overrides` pin for a dev-only advisory). 
+**Watch for / trigger to act:** when Cloudflare ships a `miniflare`/`wrangler` bump that moves `ws` to ≥ 8.21.0, the Dependabot runs go green on their own. Check with `pnpm why ws` after any wrangler/miniflare upgrade; if it still shows 8.18.0 and the noise bothers us, revisit the `pnpm.overrides` route then.
+
 ### Stale Claude Code worktrees
 If a parallel Claude Code session leaves an isolated worktree under `.claude/worktrees/<some-id>/`, vitest can pick up its test files and double-count. Mitigated by `test.exclude` in `vitest.config.ts` and `.gitignore`. Safe to `rm -rf` orphan worktrees only after `git worktree remove --force` (otherwise `git worktree prune` will catch them later).
 
