@@ -87,8 +87,7 @@ export default function AdminSettings({
             aria-describedby="bgImageFile-help"
           />
           <p id="bgImageFile-help" className="mt-1 text-sm text-gray-500">
-            PNG, JPEG, WebP, GIF, or AVIF. Max 5 MB. Uploading replaces the
-            current background (the old file is deleted).
+            PNG, JPEG, WebP, GIF, or AVIF. Max 5 MB.
           </p>
         </div>
 
