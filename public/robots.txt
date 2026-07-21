@@ -1,0 +1,17 @@
+# The public landing page may be indexed. The backoffice and the redirect
+# endpoint must not be crawled.
+User-agent: *
+Disallow: /admin
+Disallow: /out
+
+# AI/data-scraping crawlers generate almost all of this site's bot traffic and
+# provide no value to a personal link-in-bio page. Ask them to stay out.
+User-agent: ClaudeBot
+User-agent: GPTBot
+User-agent: CCBot
+User-agent: Google-Extended
+User-agent: DeepSeekBot
+User-agent: Bytespider
+User-agent: Amazonbot
+User-agent: PerplexityBot
+Disallow: /

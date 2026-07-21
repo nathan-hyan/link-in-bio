@@ -2,7 +2,7 @@
 
 > **For new agents picking this up:** read [CLAUDE.md](../CLAUDE.md) (workflow + spec), then this file for current state and remaining work, then the relevant `docs/NN-*.md` for any feature you touch. Don't forget the GitHub-account rule (use `nathan-hyan`, never the MasterClass account — see project memory).
 
-Last updated: 2026-05-08
+Last updated: 2026-05-14
 
 ---
 
@@ -21,6 +21,9 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 | 05 | [Admin background setting](05-admin-background.md) — generic `settings` table + `/admin/settings` form, public page reads `bg_image_url` from D1 | ✅ shipped |
 | 06 | [Backoffice link CRUD](06-backoffice-links.md) — `/admin` table with add / edit / reorder / toggle / delete; last-link guard, reserved-slug guard | ✅ shipped |
 | 07 | [Backoffice analytics](07-backoffice-analytics.md) — `/admin/analytics` Recharts dashboard; date range, headline numbers, time series, sources, destinations, source × destination matrix, top countries | ✅ shipped |
+| — | Hard-gate on `/admin/**` — loader in `app/routes/admin.tsx` returns 401 in production when the `Cf-Access-Jwt-Assertion` header is absent (defense-in-depth safety net if the dashboard Access policy drifts; localhost skips) | ✅ shipped |
+| — | Public page visual refresh — 2025 White Stroke logo, tightened logo box, vertically stacked buttons, `busqueda` background (`public/lib_bg_busqueda.png`) | ✅ shipped |
+| — | Bot/scanner analytics filter — `app/lib/page-view-filter.ts` skips logging scanner probes (`.env`, `config.json`, …) and bot user-agents; `public/robots.txt` added. See [02-source-tracking](02-source-tracking.md). Edge rules (Bot Fight Mode + WAF) still to be enabled in the CF dashboard | ✅ shipped (app-level) |
 
 **MVP complete.** Only the post-MVP punch list (OG image, favicon) remains from the original CLAUDE.md spec.
 
