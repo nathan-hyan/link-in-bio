@@ -101,9 +101,8 @@ The stored id goes into `https://www.youtube.com/embed/<id>` in an `<iframe>`.
 
 ### Layout
 Links card and video card are siblings in a flex container: `flex-col` on
-mobile (video below the links, fixed 16:9), `lg:flex-row` on desktop (video to
-the right). On desktop the container is `lg:items-stretch` and the video's
-inner wrapper is `lg:aspect-auto lg:flex-1`, so the video card matches the links
-card's height and the player fills it (bigger than a fixed 16:9). No heading on
-the video card. When no video is stored the container holds a single `max-w-md`
-card — visually identical to the pre-feature page.
+mobile (video below the links), `lg:flex-row lg:items-start` on desktop (video
+to the right). The player wrapper is always `aspect-video` — a locked 16:9 so
+the YouTube embed never gets cropped. No heading on the video card. When no
+video is stored the container holds a single `max-w-md` card — visually
+identical to the pre-feature page.
