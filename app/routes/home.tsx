@@ -2,6 +2,7 @@ import type { Route } from "./+types/home";
 import { getDb } from "../db/client";
 import { logPageView } from "../lib/events";
 import { getEnabledLinks } from "../lib/links";
+import { shouldLogPageView } from "../lib/page-view-filter";
 import { getBgImageUrl } from "../lib/settings";
 import { reorderForSource } from "../lib/source-reorder";
 import { resolveSource } from "../lib/source-resolution";
@@ -34,7 +35,9 @@ export async function loader({
   const validSlugs = new Set(links.map((l) => l.slug));
   const { source, rawPath } = resolveSource(params.slug, validSlugs);
 
-  await logPageView({ db, source, rawPath, request });
+  if (shouldLogPageView({ rawPath, userAgent: request.headers.get("user-agent") })) {
+    await logPageView({ db, source, rawPath, request });
+  }
 
   return { links: reorderForSource(links, source), source, bgImageUrl };
 }

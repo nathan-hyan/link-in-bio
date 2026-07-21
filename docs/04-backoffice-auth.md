@@ -73,9 +73,13 @@ Nesting `_index` and `analytics` under `routes/admin.tsx` lets us share the head
 
 `pnpm dev` runs Wrangler locally with no Cloudflare edge in front of it. So `/admin` is reachable without auth in dev. That's expected and intentional — you don't want an OTP challenge every time you start the dev server. **Auth only happens in production**, against the deployed `link-in-bio.hyan.dev`.
 
-### Authed user identity is available but unused
+### App-level hard gate (defense in depth)
 
-If we ever need the app to know who's logged in, Cloudflare adds a `Cf-Access-Jwt-Assertion` header to authenticated requests. Loaders can read `request.headers.get("cf-access-jwt-assertion")` and decode the JWT for email/identity. Not needed for a single-admin site — skipped for MVP.
+Cloudflare adds a `Cf-Access-Jwt-Assertion` header to every request it forwards after an Access challenge. The `admin.tsx` loader uses this as a safety net: in production it throws a **401** if that header is absent (i.e. the request did not pass through CF Access). Localhost (`wrangler dev`) skips the check so local dev needs no auth.
+
+The dashboard-level Access policy is still the **primary** gate (it shows a real login UI). This loader is the backstop for the exact failure that shipped once in production — the Access policy being missing/misconfigured, leaving `/admin` open to anyone with the URL. The JWT is only checked for presence; it is not decoded for identity (single-admin site).
+
+Added in commit `b2a3267`, direct-pushed to `main` because the gap was live.
 
 ### Slug collision with `admin`
 

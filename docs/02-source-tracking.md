@@ -19,6 +19,8 @@ Wire the public page to know **where the visitor came from** based on the URL pa
 - `app/lib/source-reorder.test.ts` — **new**. 6 cases: direct, unknown, first/middle/last position match, no-mutation invariant.
 - `app/lib/events.ts` — **new**. `logPageView({ db, source, rawPath, request })` writes to `events`. Reads `cf-ipcountry`, `user-agent`, `referer` from request headers; missing headers stored as `null`.
 - `app/lib/events.test.ts` — **new**. 4 cases: basic page_view, header capture, missing-header → null, raw_path persistence.
+- `app/lib/page-view-filter.ts` — **new** (2026-05-14, bot-noise cleanup). `shouldLogPageView({ rawPath, userAgent })` returns `false` for scanner probes (a non-empty `rawPath` that doesn't match the slug pattern `^[a-z0-9-]+$` — e.g. `.env`, `config.json`, `sitemap.xml`) and for known bot/crawler user-agents. The loader skips the `logPageView` insert when this is `false`.
+- `app/lib/page-view-filter.test.ts` — **new**. 5 cases: real root visit, slug-shaped miss, probe paths dropped, bot UAs dropped, missing UA still logged.
 - `app/routes.ts` — **modified**. Replaced `index("routes/home.tsx")` with `route(":slug?", "routes/home.tsx")`. Single optional-param route matches both `/` and `/:anything`.
 - `app/routes/home.tsx` — **modified**. Loader now reads `params.slug`, calls `resolveSource` with the enabled slugs as the whitelist, calls `logPageView`, and reorders before returning.
 
@@ -85,6 +87,18 @@ Technically `reorderForSource(links, "direct")` is a no-op. Calling it unconditi
 ### `:slug?` optional segment
 
 React Router's path-to-regexp syntax supports `?` for optional segments. `:slug?` matches both `/` and `/anything`. We could have written two route entries (`index(...)` + `route(":slug", ..., { id })`) instead — the `?` form is shorter and avoids the route-id deduplication dance.
+
+### Bot / scanner noise filter (2026-05-14)
+
+Production analytics was ~90% bot traffic: credential scanners probing `/.env`, `/config.json`, `/.git/config`, etc. (each logged as `source=direct` + `raw_path=<probe>` via the catch-all), plus AI crawlers and security scanners (`ClaudeBot`, `TLM-Audit-Scanner`, Censys, leakix, `facebookexternalhit`, Googlebot). Only 141 of 3339 page_views had a corresponding real human signal (`link_click`).
+
+`shouldLogPageView` (in `app/lib/page-view-filter.ts`) gates the insert on two cheap checks:
+- **Probe paths:** a real inbound source is always slug-shaped (`^[a-z0-9-]+$`, no dots). Any non-empty `rawPath` that fails the pattern is a scanner probe → not logged. The page still renders/404s exactly as before; only the DB write is skipped.
+- **Bot user-agents:** a broad case-insensitive substring match (`bot`, `crawl`, `spider`, `scan`, `http-client`, `censys`, `leakix`, `externalhit`, `xpanse`, `headless`, …). A missing UA is logged (conservative — real browsers always send one).
+
+`public/robots.txt` complements this: served as a static asset so `/robots.txt` hits (was 370) stop routing through the loader, and it asks AI/scraper crawlers (ClaudeBot, GPTBot, CCBot, Bytespider, …) to stay out and disallows `/admin` + `/out` for everyone.
+
+Edge-level mitigation (Cloudflare Bot Fight Mode + a WAF rule blocking `.env`/`.git`/`config.json` paths) is the complementary defense for headless-browser UAs this filter can't distinguish — configured in the CF dashboard, not in this repo.
 
 ### Nothing visual changes for the source-platform button
 
