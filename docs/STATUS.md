@@ -18,7 +18,7 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 | 03 | [Outbound tracking](03-outbound-tracking.md) — `/out/:slug` logs `link_click` then 302s; 404 if missing/disabled | ✅ shipped |
 | 04 | [Backoffice auth](04-backoffice-auth.md) — `/admin/**` route shells + Cloudflare Access policy at the edge | ✅ shipped |
 | — | Frosted-glass card around the public page content (small UI polish) | ✅ shipped |
-| 05 | [Admin background setting](05-admin-background.md) — generic `settings` table + `/admin/settings` form, public page reads `bg_image_url` from D1 | ✅ shipped |
+| 05 | [Admin background setting](05-admin-background.md) — generic `settings` table + `/admin/settings`, public page reads `bg_image_url` from D1. **Background image is now uploaded** (multipart) to Workers KV (`MEDIA` binding, key `background`) and served at `/media/bg?v=<ts>`; re-upload overwrites (old image deleted). | ✅ shipped |
 | 06 | [Backoffice link CRUD](06-backoffice-links.md) — `/admin` table with add / edit / reorder / toggle / delete; last-link guard, reserved-slug guard | ✅ shipped |
 | 07 | [Backoffice analytics](07-backoffice-analytics.md) — `/admin/analytics` Recharts dashboard; date range, headline numbers, time series, sources, destinations, source × destination matrix, top countries | ✅ shipped |
 
@@ -26,6 +26,7 @@ Live at https://link-in-bio.hyan.dev (custom domain attached) and https://hyan-l
 
 **Operational state:**
 - D1 prod database `hyan-linkbio` (id `fbe6a12c-dc63-4898-ad08-45791264647a`)
+- KV namespace `hyan-linkbio-media` (id `0062cd6b0f824db3be2bf8bd1f6ba6e9`, binding `MEDIA`) — holds the uploaded background image under key `background`
 - Migrations applied; seed populated the 5 starting platforms
 - `CLOUDFLARE_API_TOKEN` is in repo secrets (Edit Cloudflare Workers preset + D1 Edit)
 - CI auto-deploys on push to `main` via `wrangler deploy`
